@@ -29,14 +29,15 @@ def get_price(currency_pair):
 def telegram_bot(telegram_token):
     bot = telebot.TeleBot(telegram_token)
 
-    @bot.message_handler(commands=["start"])
+    @bot.message_handler(commands=["start", "help"])
     def start_message(message):
         bot.send_message(
             message.chat.id,
             "Привет, человек!\nВот что я умею:\n"
             "/price_btc - показать текущую цену продажи Bitcoin (BTC)\n"
             "/price_eth - показать текущую цену продажи Ethereum (ETH)\n"
-            "/random_cat - показать котика"
+            "/random_cat - показать котика\n"
+            "/help - показать список команд"
         )
 
     @bot.message_handler(commands=["price_btc"])
