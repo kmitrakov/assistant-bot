@@ -1,6 +1,7 @@
 import requests
 import telebot
 import shutil
+import httplib2
 
 from settings import *
 from decouple import config
@@ -19,10 +20,10 @@ def get_price(currency_pair):
 
         sell_price = response[currency_pair]["sell"]
 
-        return f"Sell {currency_pair_splitted[0].upper()} price: {sell_price} {currency_pair_splitted[1].upper()}"
+        return f"Цена продажи {currency_pair_splitted[0].upper()}: {sell_price} {currency_pair_splitted[1].upper()}"
     except Exception as ex:
         print(ex)
-        return "Something was wrong..."
+        return "Что-то пошло не так..."
 
 
 def telegram_bot(telegram_token):
@@ -32,10 +33,10 @@ def telegram_bot(telegram_token):
     def start_message(message):
         bot.send_message(
             message.chat.id,
-            "Hello friend!\nThat's what I can:\n"
-            "/price_btc - current price of Bitcoin (BTC)\n"
-            "/price_eth - current price of Ethereum (ETH)\n"
-            "/random_cat - random cat"
+            "Привет, человек!\nВот что я умею:\n"
+            "/price_btc - показать текущую цену продажи Bitcoin (BTC)\n"
+            "/price_eth - показать текущую цену продажи Ethereum (ETH)\n"
+            "/random_cat - показать котика"
         )
 
     @bot.message_handler(commands=["price_btc"])
@@ -58,14 +59,11 @@ def telegram_bot(telegram_token):
         file_temp = "temp/images/" + datetime.now().strftime("%Y%m%d%H%M%S") + ".jpeg"
 
         try:
-            res = requests.get(url, stream=True)
-
-            if res.status_code == 200:
-                with open(file_temp, 'wb') as f:
-                    shutil.copyfileobj(res.raw, f)
-                print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "- Image successfully downloaded:", file_temp)
-            else:
-                print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "- Image download error")
+            h = httplib2.Http('.cache')
+            response, content = h.request(url)
+            out = open(file_temp, 'wb')
+            out.write(content)
+            out.close()
 
             image = open(file_temp, 'rb')
 
@@ -77,14 +75,14 @@ def telegram_bot(telegram_token):
             print(ex)
             bot.send_message(
                 message.chat.id,
-                "Something was wrong..."
+                "Что-то пошло не так..."
             )
 
     @bot.message_handler(content_types=["text"])
     def send_text(message):
         bot.send_message(
             message.chat.id,
-            "What? Check the command!"
+            "Я не знаю такой команды..."
         )
 
     bot.polling()
